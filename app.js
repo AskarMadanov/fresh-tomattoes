@@ -8,9 +8,14 @@ const mongoose = require('mongoose');
 const app = express();
 
 /** Middlewares and Setups */
+// handlebar setup
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', './views');
+// allows express to see form data that is coming in from a POST reques
+app.use(express.urlencoded({extended: true}));
+app.use(express.json()) 
+
 
 /** Database Connection */
 const db_username = 'admin';
@@ -30,28 +35,43 @@ mongoose.connect(MONGODB_URL, connectionParams)
 
 
 
-// Schema
-const Review = mongoose.model("Review", {
+// Schema Model
+const Review = mongoose.model('Review', {
     title: String,
-    movieTitle: String,
+    description: String,
+    movieTitle: String
   });
-
-
-// OUR MOCK ARRAY OF PROJECTS
 
 
 /** Routes */
 // INDEX
 app.get('/', (req, res) => {
     // find from database
-    Review.find()
+    Review.find().lean()
     .then(reviews => {
       res.render('reviews-index', { reviews: reviews });
     })
     .catch(err => {
       console.log(err);
     })
+});
+
+// NEW
+app.get('/reviews/new', (req, res) => {
+    res.render('reviews-new', {});
 })
+
+// CREATE
+app.post('/reviews', (req, res) => {
+    // data coming inside req.body
+    console.log(req.body);
+
+    Review.create(req.body).then((review) => {
+      res.redirect('/');
+    }).catch((err) => {
+      console.log(err.message);
+    })
+  })
 
 /** Listen */
 app.listen(3000, () => {
